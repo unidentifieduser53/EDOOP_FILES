@@ -1,6 +1,6 @@
 import tkinter
+from tkinter import messagebox
 import customtkinter
-from CTkMessagebox import CTkMessagebox
 from pytubefix import YouTube
 import imageio_ffmpeg
 import subprocess
@@ -14,27 +14,23 @@ class App(customtkinter.CTk):
         super().__init__()
 
         self.geometry("720x550")
-        self.title("YouTube Downloader Suite")
+        self.title("YouTube Downloader")
         customtkinter.set_appearance_mode("System")
         customtkinter.set_default_color_theme("blue")
 
-        # Container frame to hold pages
         self.container = customtkinter.CTkFrame(self)
         self.container.pack(fill="both", expand=True)
         self.container.grid_rowconfigure(0, weight=1)
         self.container.grid_columnconfigure(0, weight=1)
 
-        # Dictionary to store instantiated frames
         self.frames = {}
 
-        # Initialize frames
         for PageClass in (MP4Page, MP3Page):
             page_name = PageClass.__name__
             frame = PageClass(parent=self.container, controller=self)
             self.frames[page_name] = frame
             frame.grid(row=0, column=0, sticky="nsew")
 
-        # Start on the main MP4 page
         self.show_frame("MP4Page")
 
     def show_frame(self, page_name):
@@ -47,7 +43,6 @@ class MP4Page(customtkinter.CTkFrame):
         super().__init__(parent)
         self.controller = controller
 
-        # Navigation Buttons Frame (Centered at the Top)
         nav_frame = customtkinter.CTkFrame(self, fg_color="transparent")
         nav_frame.pack(pady=15)
 
@@ -67,7 +62,6 @@ class MP4Page(customtkinter.CTkFrame):
         )
         mp3_nav_button.pack(side="left", padx=10)
 
-        # Title
         self.label = customtkinter.CTkLabel(
             self,
             text="Welcome to YouTube MP4 Downloader",
@@ -75,7 +69,6 @@ class MP4Page(customtkinter.CTkFrame):
         )
         self.label.pack(padx=10, pady=10)
 
-        # Link Entry
         self.var_link = tkinter.StringVar()
         self.link = customtkinter.CTkEntry(
             self,
@@ -86,20 +79,16 @@ class MP4Page(customtkinter.CTkFrame):
         )
         self.link.pack(pady=10)
 
-        # Progress Percentage Label
         self.percentage = customtkinter.CTkLabel(self, text="0%")
         self.percentage.pack(pady=5)
 
-        # Progress Bar
         self.progressBar = customtkinter.CTkProgressBar(self, width=400)
         self.progressBar.set(0)
         self.progressBar.pack(padx=10, pady=5)
 
-        # Status Label
         self.finish = customtkinter.CTkLabel(self, text="")
         self.finish.pack(pady=5)
 
-        # Download Button
         self.button = customtkinter.CTkButton(
             self,
             text="Download MP4",
@@ -121,11 +110,7 @@ class MP4Page(customtkinter.CTkFrame):
         try:
             ytLink = self.link.get().strip()
             if not ytLink:
-                CTkMessagebox(
-                    title="Input Error",
-                    message="Please enter a valid YouTube link.",
-                    icon="warning"
-                )
+                messagebox.showwarning("Input Error", "Please enter a valid YouTube link.")
                 return
 
             self.progressBar.set(0)
@@ -153,11 +138,7 @@ class MP4Page(customtkinter.CTkFrame):
             ).order_by("abr").desc().first()
 
             if not video or not audio:
-                CTkMessagebox(
-                    title="Download Error",
-                    message="Required video or audio streams were not found.",
-                    icon="cancel"
-                )
+                messagebox.showerror("Download Error", "Required video or audio streams were not found.")
                 self.finish.configure(
                     text="Stream error occurred.",
                     text_color="red"
@@ -216,11 +197,7 @@ class MP4Page(customtkinter.CTkFrame):
 
         except Exception as e:
             self.finish.configure(text="Error occurred.", text_color="red")
-            CTkMessagebox(
-                title="Error",
-                message=f"An unexpected error occurred:\n{e}",
-                icon="cancel"
-            )
+            messagebox.showerror("Error", f"An unexpected error occurred:\n{e}")
 
 
 if __name__ == "__main__":
