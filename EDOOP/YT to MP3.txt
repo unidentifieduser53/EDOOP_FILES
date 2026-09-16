@@ -1,0 +1,219 @@
+import tkinter
+import customtkinter
+from pytubefix import YouTube
+import imageio_ffmpeg
+import subprocess
+import os
+
+
+def startdownload():
+    try:
+        ytLink = link.get().strip()
+
+        # Reset progress
+        progressBar.set(0)
+        percentage.configure(text="0%")
+
+        finish.configure(
+            text="Getting audio information...",
+            text_color="white"
+        )
+
+        # Create YouTube object
+        ytObject = YouTube(
+            ytLink,
+            on_progress_callback=on_progress
+        )
+
+        # Display title
+        label.configure(text=ytObject.title)
+
+        # Get highest quality audio stream
+        audio = ytObject.streams.get_audio_only()
+
+        if audio is None:
+            finish.configure(
+                text="No audio stream found.",
+                text_color="red"
+            )
+            return
+
+        finish.configure(
+            text="Downloading audio...",
+            text_color="white"
+        )
+
+        # Temporary audio file
+        temp_audio = "temp_audio.m4a"
+
+        audio.download(
+            filename=temp_audio
+        )
+
+        finish.configure(
+            text="Converting to MP3...",
+            text_color="white"
+        )
+
+        # Clean YouTube title for Windows filename
+        safe_title = "".join(
+            c for c in ytObject.title
+            if c.isalnum() or c in " ._-"
+        ).strip()
+
+        output_file = safe_title + ".mp3"
+
+        # Get FFmpeg executable
+        ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+
+        # Convert downloaded audio to MP3
+        subprocess.run(
+            [
+                ffmpeg,
+                "-y",
+                "-i", temp_audio,
+                "-vn",
+                "-codec:a", "libmp3lame",
+                "-b:a", "192k",
+                output_file
+            ],
+            check=True
+        )
+
+        # Delete temporary M4A
+        if os.path.exists(temp_audio):
+            os.remove(temp_audio)
+
+        # Complete progress
+        progressBar.set(1)
+        percentage.configure(text="100%")
+
+        finish.configure(
+            text="MP3 Download Complete!",
+            text_color="green"
+        )
+
+    except Exception as e:
+        print("ERROR:", e)
+
+        finish.configure(
+            text=f"Error: {e}",
+            text_color="red"
+        )
+
+
+def on_progress(stream, chunk, bytes_remaining):
+
+    totalSize = stream.filesize
+
+    bytesDownloaded = totalSize - bytes_remaining
+
+    percentage_of_completion = (
+        bytesDownloaded / totalSize
+    ) * 100
+
+    per = str(int(percentage_of_completion))
+
+    percentage.configure(
+        text=per + "%"
+    )
+
+    percentage.update()
+
+    progressBar.set(
+        float(percentage_of_completion) / 100
+    )
+
+
+# -------------------------
+# GUI
+# -------------------------
+
+customtkinter.set_appearance_mode("System")
+customtkinter.set_default_color_theme("blue")
+
+window = customtkinter.CTk()
+
+window.geometry("720x480")
+window.title("YouTube MP3 Converter")
+
+
+# Title
+label = customtkinter.CTkLabel(
+    window,
+    text="YouTube to MP3 Converter",
+    font=("Arial", 20)
+)
+
+label.pack(
+    padx=10,
+    pady=30
+)
+
+
+# Link variable
+var_link = tkinter.StringVar()
+
+
+# Link textbox
+link = customtkinter.CTkEntry(
+    window,
+    height=40,
+    width=400,
+    textvariable=var_link,
+    placeholder_text="Paste YouTube Link"
+)
+
+link.pack()
+
+
+# Percentage
+percentage = customtkinter.CTkLabel(
+    window,
+    text="0%"
+)
+
+percentage.pack(
+    pady=10
+)
+
+
+# Progress Bar
+progressBar = customtkinter.CTkProgressBar(
+    window,
+    width=400
+)
+
+progressBar.set(0)
+
+progressBar.pack(
+    padx=10,
+    pady=10
+)
+
+
+# Status
+finish = customtkinter.CTkLabel(
+    window,
+    text=""
+)
+
+finish.pack(
+    pady=10
+)
+
+
+# Download button
+button = customtkinter.CTkButton(
+    window,
+    text="Download MP3",
+    command=startdownload
+)
+
+button.pack(
+    padx=10,
+    pady=10
+)
+
+
+window.mainloop()
