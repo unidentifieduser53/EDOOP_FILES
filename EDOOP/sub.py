@@ -1,6 +1,6 @@
 import tkinter
+from tkinter import messagebox
 import customtkinter
-from CTkMessagebox import CTkMessagebox
 from pytubefix import YouTube
 import imageio_ffmpeg
 import subprocess
@@ -12,7 +12,6 @@ class MP3Page(customtkinter.CTkFrame):
         super().__init__(parent)
         self.controller = controller
 
-        # Navigation Buttons Frame (Centered at the Top)
         nav_frame = customtkinter.CTkFrame(self, fg_color="transparent")
         nav_frame.pack(pady=15)
 
@@ -32,7 +31,6 @@ class MP3Page(customtkinter.CTkFrame):
         )
         mp3_nav_button.pack(side="left", padx=10)
 
-        # Title
         self.label = customtkinter.CTkLabel(
             self,
             text="YouTube to MP3 Converter",
@@ -40,7 +38,6 @@ class MP3Page(customtkinter.CTkFrame):
         )
         self.label.pack(padx=10, pady=10)
 
-        # Link Entry
         self.var_link = tkinter.StringVar()
         self.link = customtkinter.CTkEntry(
             self,
@@ -51,20 +48,16 @@ class MP3Page(customtkinter.CTkFrame):
         )
         self.link.pack(pady=10)
 
-        # Progress Percentage Label
         self.percentage = customtkinter.CTkLabel(self, text="0%")
         self.percentage.pack(pady=5)
 
-        # Progress Bar
         self.progressBar = customtkinter.CTkProgressBar(self, width=400)
         self.progressBar.set(0)
         self.progressBar.pack(padx=10, pady=5)
 
-        # Status Label
         self.finish = customtkinter.CTkLabel(self, text="")
         self.finish.pack(pady=5)
 
-        # Download Button
         self.button = customtkinter.CTkButton(
             self,
             text="Download MP3",
@@ -86,11 +79,7 @@ class MP3Page(customtkinter.CTkFrame):
         try:
             ytLink = self.link.get().strip()
             if not ytLink:
-                CTkMessagebox(
-                    title="Input Error",
-                    message="Please enter a valid YouTube link.",
-                    icon="warning"
-                )
+                messagebox.showwarning("Input Error", "Please enter a valid YouTube link.")
                 return
 
             self.progressBar.set(0)
@@ -110,11 +99,7 @@ class MP3Page(customtkinter.CTkFrame):
             audio = ytObject.streams.get_audio_only()
 
             if audio is None:
-                CTkMessagebox(
-                    title="Download Error",
-                    message="No valid audio stream found.",
-                    icon="cancel"
-                )
+                messagebox.showerror("Download Error", "No valid audio stream found.")
                 self.finish.configure(
                     text="No audio stream found.",
                     text_color="red"
@@ -164,8 +149,4 @@ class MP3Page(customtkinter.CTkFrame):
 
         except Exception as e:
             self.finish.configure(text="Error occurred.", text_color="red")
-            CTkMessagebox(
-                title="Error",
-                message=f"An unexpected error occurred:\n{e}",
-                icon="cancel"
-            )
+            messagebox.showerror("Error", f"An unexpected error occurred:\n{e}")
